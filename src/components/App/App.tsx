@@ -1,9 +1,11 @@
 import React from 'react';
-import LinksList from '../LinksList';
+// import LinksList from '../LinksList';
+import CreateLink from '../CreateLink';
 
 function App() {
   return (
-    <LinksList />
+    // <LinksList />
+    <CreateLink />
   );
 }
 
