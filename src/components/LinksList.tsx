@@ -23,7 +23,7 @@ const LinksList = () => {
 
     const { links } = data.feed;
 
-    return (<div>{links.map((link: LinkType) => <Link link={link} />)}</div>);
+    return (<div>{links.map((link: LinkType) => <Link key={link.url} link={link} />)}</div>);
 };
 
 export default LinksList;
