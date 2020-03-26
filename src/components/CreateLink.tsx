@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { gql } from 'apollo-boost';
 import { useMutation } from '@apollo/react-hooks';
 import { useHistory } from 'react-router-dom';
+import { FEED_QUERY } from './LinksList';
 
 const CREATE_LINK_MUTATION = gql`
   mutation CreateLinkMutation($description: String!, $url: String!) {
@@ -18,7 +19,17 @@ function CreateLink() {
     const [description, setDescription] = useState('');
     const [url, setUrl] = useState('');
     const [createLink] = useMutation(CREATE_LINK_MUTATION, {
-        onCompleted: () => history.push('/')
+        onCompleted: () => history.push('/'),
+        update: (store, { data: { createLink: link } }) => {
+            const data: any = store.readQuery({ query: FEED_QUERY });
+
+            data.feed.links.unshift(link);
+
+            store.writeQuery({
+              query: FEED_QUERY,
+              data
+            });
+        }
     });
 
     const submit = () => createLink({variables: {

@@ -31,7 +31,7 @@ type User = {
     links: LinkType[];
 }
 
-type Vote = {
+export type Vote = {
     id: string;
     user: User;
     link: LinkType;
@@ -48,14 +48,16 @@ export type LinkType = {
 
 type LinkProps = {
     link: LinkType;
-  index: number
+    index: number;
 };
 
 const Link = ({ link, index }: LinkProps) => {
     const { id, url, description, votes, postedBy, createdAt } = link;
     const authToken = localStorage.getItem(AUTH_TOKEN);
     const [vote] = useMutation(VOTE_MUTATION);
-    const upVote = () => vote({variables: {linkId: id}});
+    const upVote = () => vote({
+        variables: {linkId: id},
+    });
 
     return (
         <div className="flex mt2 items-start">

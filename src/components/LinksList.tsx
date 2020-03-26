@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import Link, { LinkType } from './Link';
 
-const FEED_QUERY = gql`
+export const FEED_QUERY = gql`
   {
     feed {
       links {
@@ -24,7 +24,7 @@ const FEED_QUERY = gql`
       }
     }
   }
-`
+`;
 
 const LinksList = () => {
     const { loading, error, data } = useQuery(FEED_QUERY);
@@ -37,7 +37,11 @@ const LinksList = () => {
     return (
         <div>
             {links.map((link: LinkType, index: number) => 
-                <Link key={link.url} link={link} index={index} />
+                <Link 
+                  key={link.url} 
+                  link={link} 
+                  index={index} 
+                />
             )}
         </div>
     );
