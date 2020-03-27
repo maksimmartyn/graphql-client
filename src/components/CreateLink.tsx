@@ -3,6 +3,7 @@ import { gql } from 'apollo-boost';
 import { useMutation } from '@apollo/react-hooks';
 import { useHistory } from 'react-router-dom';
 import { FEED_QUERY } from './LinksList';
+import { LINKS_PER_PAGE } from '../constants';
 
 const CREATE_LINK_MUTATION = gql`
   mutation CreateLinkMutation($description: String!, $url: String!) {
@@ -19,16 +20,24 @@ function CreateLink() {
     const [description, setDescription] = useState('');
     const [url, setUrl] = useState('');
     const [createLink] = useMutation(CREATE_LINK_MUTATION, {
-        onCompleted: () => history.push('/'),
+        onCompleted: () => history.push('/new/1'),
         update: (store, { data: { createLink: link } }) => {
-            const data: any = store.readQuery({ query: FEED_QUERY });
+            const first = LINKS_PER_PAGE;
+            const skip = 0
+            const orderBy = 'createdAt_DESC'
+
+            const data: any = store.readQuery({
+              query: FEED_QUERY,
+              variables: { first, skip, orderBy }
+            });
 
             data.feed.links.unshift(link);
 
             store.writeQuery({
               query: FEED_QUERY,
-              data
-            });
+              data,
+              variables: { first, skip, orderBy }
+            })
         }
     });
 

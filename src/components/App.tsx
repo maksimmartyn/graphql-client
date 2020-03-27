@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch, Route } from 'react-router-dom';
+import { Switch, Route, Redirect } from 'react-router-dom';
 
 import Header from './Header';
 import LinksList from './LinksList';
@@ -14,10 +14,12 @@ function App() {
         
         <div className="ph3 pv1 background-gray">
             <Switch>
-                <Route exact path="/" component={LinksList} />
+                <Route exact path='/' render={() => <Redirect to='/new/1' />} />
                 <Route exact path="/create" component={CreateLink} />
                 <Route exact path="/login" component={Login} />
                 <Route exact path='/search' component={Search} />
+                <Route exact path='/top' component={LinksList} />
+                <Route exact path='/new/:page' component={LinksList} />
             </Switch>
         </div>
   </div>

@@ -1,16 +1,18 @@
 import React, { useEffect } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
+import { useLocation, useParams, useHistory } from 'react-router-dom';
 import Link, { LinkType } from './Link';
+import { LINKS_PER_PAGE } from '../constants';
 
 export const FEED_QUERY = gql`
-  {
-    feed {
+  query FeedQuery($first: Int, $skip: Int, $orderBy: LinkOrderByInput) {
+    feed(first: $first, skip: $skip, orderBy: $orderBy) {
       links {
         id
+        createdAt
         url
         description
-        createdAt
         postedBy {
           id
           name
@@ -22,9 +24,10 @@ export const FEED_QUERY = gql`
           }
         }
       }
+      count
     }
   }
-`;
+`
 
 const NEW_LINKS_SUBSCRIPTION = gql`
   subscription {
@@ -74,8 +77,60 @@ const NEW_VOTES_SUBSCRIPTION = gql`
   }
 `;
 
+
+interface PageParams {
+  page: string;
+}
+
+interface RoutingInfo {
+  isNewPage: boolean
+  page: number
+}
+
+function useRoutingInfo(): RoutingInfo {
+  const location = useLocation();
+  const isNewPage = location.pathname.includes('new');
+
+  const params = useParams<PageParams>(); 
+  const page = parseInt(params.page, 10);
+  
+  return {isNewPage, page};
+}
+
+function useQueryVariables() {
+  const {isNewPage, page} = useRoutingInfo();
+
+  const skip = isNewPage ? (page - 1) * LINKS_PER_PAGE : 0;
+  const first = isNewPage ? LINKS_PER_PAGE : 100;
+  const orderBy = isNewPage ? 'createdAt_DESC' : null;
+  
+  return { first, skip, orderBy };
+}
+
+function usePagination() {
+  const history = useHistory();
+  const { page } = useRoutingInfo();
+
+  function nextPage(data: any) {
+    if (page <= data.feed.count / LINKS_PER_PAGE) {
+      const nextPage = page + 1;
+      history.push(`/new/${nextPage}`);
+    }
+  }
+  
+  function previousPage() {
+    if (page > 1) {
+      const previousPage = page - 1;
+      history.push(`/new/${previousPage}`);
+    }
+  }
+
+  return [previousPage, nextPage];
+}
+
 const LinksList = () => {
-    const { loading, error, data, subscribeToMore } = useQuery(FEED_QUERY);
+    const queryVariables = useQueryVariables();
+    const { loading, error, data, subscribeToMore } = useQuery(FEED_QUERY, {variables: queryVariables});
 
     useEffect(() => {
       subscribeToMore({
@@ -108,6 +163,9 @@ const LinksList = () => {
       });
     });
 
+    const {isNewPage, page} = useRoutingInfo();
+    const [prev, next] = usePagination();
+
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error :(</div>;
 
@@ -119,8 +177,19 @@ const LinksList = () => {
                 <Link 
                   key={link.url} 
                   link={link} 
-                  index={index} 
+                  index={index + page} 
                 />
+            )}
+
+            {isNewPage && (
+              <div className="flex ml4 mv3 gray">
+                <div className="pointer mr2" onClick={prev}>
+                  Previous
+                </div>
+                <div className="pointer" onClick={() => next(data)}>
+                  Next
+                </div>
+              </div>
             )}
         </div>
     );
