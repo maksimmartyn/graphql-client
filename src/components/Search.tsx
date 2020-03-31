@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { gql } from 'apollo-boost';
-import { useQuery } from '@apollo/react-hooks';
-import Link, {LinkType} from './Link';
+import React, { useState } from "react";
+import { gql } from "apollo-boost";
+import { useQuery } from "@apollo/react-hooks";
+import Link, { LinkType } from "./Link";
 
 const FEED_SEARCH_QUERY = gql`
   query FeedSearchQuery($filter: String!) {
@@ -24,32 +24,27 @@ const FEED_SEARCH_QUERY = gql`
       }
     }
   }
-`
+`;
 
 function Search() {
-    const [filter, setFilter] = useState('');
-    const { data, refetch } = useQuery(FEED_SEARCH_QUERY, {
-        variables: {filter},
-    }); 
+  const [filter, setFilter] = useState("");
+  const { data, refetch } = useQuery(FEED_SEARCH_QUERY, {
+    variables: { filter },
+  });
 
-    return (
-        <div>
-            <div>
-                Search
-                
-                <input
-                    type='text'
-                    onChange={e => setFilter(e.target.value)}
-                />
-
-                <button onClick={() => refetch({filter})}>OK</button>
-            </div>
-
-            {data?.feed?.links.map((link: LinkType, index: number) => (
-                <Link key={link.id} link={link} index={index} />
-            ))}
+  return (
+    <div>
+      <div>
+        Search
+        <input type="text" onChange={(e) => setFilter(e.target.value)} />
+        <button onClick={() => refetch({ filter })}>OK</button>
       </div>
-    );
+
+      {data?.feed?.links.map((link: LinkType, index: number) => (
+        <Link key={link.id} link={link} index={index} />
+      ))}
+    </div>
+  );
 }
 
 export default Search;

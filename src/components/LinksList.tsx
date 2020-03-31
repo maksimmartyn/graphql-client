@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
-import { useQuery } from '@apollo/react-hooks';
-import { gql } from 'apollo-boost';
-import { useLocation, useParams, useHistory } from 'react-router-dom';
-import Link, { LinkType } from './Link';
-import { LINKS_PER_PAGE } from '../constants';
+import React, { useEffect } from "react";
+import { useQuery } from "@apollo/react-hooks";
+import { gql } from "apollo-boost";
+import { useLocation, useParams, useHistory } from "react-router-dom";
+import Link, { LinkType } from "./Link";
+import { LINKS_PER_PAGE } from "../constants";
 
 export const FEED_QUERY = gql`
   query FeedQuery($first: Int, $skip: Int, $orderBy: LinkOrderByInput) {
@@ -27,7 +27,7 @@ export const FEED_QUERY = gql`
       count
     }
   }
-`
+`;
 
 const NEW_LINKS_SUBSCRIPTION = gql`
   subscription {
@@ -48,7 +48,7 @@ const NEW_LINKS_SUBSCRIPTION = gql`
       }
     }
   }
-`
+`;
 
 const NEW_VOTES_SUBSCRIPTION = gql`
   subscription {
@@ -77,33 +77,32 @@ const NEW_VOTES_SUBSCRIPTION = gql`
   }
 `;
 
-
 interface PageParams {
   page: string;
 }
 
 interface RoutingInfo {
-  isNewPage: boolean
-  page: number
+  isNewPage: boolean;
+  page: number;
 }
 
 function useRoutingInfo(): RoutingInfo {
   const location = useLocation();
-  const isNewPage = location.pathname.includes('new');
+  const isNewPage = location.pathname.includes("new");
 
-  const params = useParams<PageParams>(); 
+  const params = useParams<PageParams>();
   const page = parseInt(params.page, 10);
-  
-  return {isNewPage, page};
+
+  return { isNewPage, page };
 }
 
 function useQueryVariables() {
-  const {isNewPage, page} = useRoutingInfo();
+  const { isNewPage, page } = useRoutingInfo();
 
   const skip = isNewPage ? (page - 1) * LINKS_PER_PAGE : 0;
   const first = isNewPage ? LINKS_PER_PAGE : 100;
-  const orderBy = isNewPage ? 'createdAt_DESC' : null;
-  
+  const orderBy = isNewPage ? "createdAt_DESC" : null;
+
   return { first, skip, orderBy };
 }
 
@@ -117,7 +116,7 @@ function usePagination() {
       history.push(`/new/${nextPage}`);
     }
   }
-  
+
   function previousPage() {
     if (page > 1) {
       const previousPage = page - 1;
@@ -129,70 +128,68 @@ function usePagination() {
 }
 
 const LinksList = () => {
-    const queryVariables = useQueryVariables();
-    const { loading, error, data, subscribeToMore } = useQuery(FEED_QUERY, {variables: queryVariables});
+  const queryVariables = useQueryVariables();
+  const { loading, error, data, subscribeToMore } = useQuery(FEED_QUERY, {
+    variables: queryVariables,
+  });
 
-    useEffect(() => {
-      subscribeToMore({
-        document: NEW_LINKS_SUBSCRIPTION,
-        updateQuery: (prev, { subscriptionData: subscription }) => {
-          if (!subscription.data) {
-            return prev
-          };
-
-          const newLink: LinkType = subscription.data.newLink;
-          const links: LinkType[] = prev.feed.links;
-          const exists = links.some((link) => link.id === newLink.id);
-          
-          if (exists) {
-            return prev;
-          }
-    
-          return Object.assign({}, prev, {
-            feed: {
-              links: [newLink, ...links],
-              count: links.length + 1,
-              __typename: prev.feed.__typename
-            }
-          })
+  useEffect(() => {
+    subscribeToMore({
+      document: NEW_LINKS_SUBSCRIPTION,
+      updateQuery: (prev, { subscriptionData: subscription }) => {
+        if (!subscription.data) {
+          return prev;
         }
-      });
 
-      subscribeToMore({
-        document: NEW_VOTES_SUBSCRIPTION
-      });
+        const newLink: LinkType = subscription.data.newLink;
+        const links: LinkType[] = prev.feed.links;
+        const exists = links.some((link) => link.id === newLink.id);
+
+        if (exists) {
+          return prev;
+        }
+
+        return Object.assign({}, prev, {
+          feed: {
+            links: [newLink, ...links],
+            count: links.length + 1,
+            __typename: prev.feed.__typename,
+          },
+        });
+      },
     });
 
-    const {isNewPage, page} = useRoutingInfo();
-    const [prev, next] = usePagination();
+    subscribeToMore({
+      document: NEW_VOTES_SUBSCRIPTION,
+    });
+  });
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error :(</div>;
+  const { isNewPage, page } = useRoutingInfo();
+  const [prev, next] = usePagination();
 
-    const { links } = data.feed;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error :(</div>;
 
-    return (
-        <div>
-            {links.map((link: LinkType, index: number) => 
-                <Link 
-                  key={link.url} 
-                  link={link} 
-                  index={index + page} 
-                />
-            )}
+  const { links } = data.feed;
 
-            {isNewPage && (
-              <div className="flex ml4 mv3 gray">
-                <div className="pointer mr2" onClick={prev}>
-                  Previous
-                </div>
-                <div className="pointer" onClick={() => next(data)}>
-                  Next
-                </div>
-              </div>
-            )}
+  return (
+    <div>
+      {links.map((link: LinkType, index: number) => (
+        <Link key={link.url} link={link} index={index + page} />
+      ))}
+
+      {isNewPage && (
+        <div className="flex ml4 mv3 gray">
+          <div className="pointer mr2" onClick={prev}>
+            Previous
+          </div>
+          <div className="pointer" onClick={() => next(data)}>
+            Next
+          </div>
         </div>
-    );
+      )}
+    </div>
+  );
 };
 
 export default LinksList;
